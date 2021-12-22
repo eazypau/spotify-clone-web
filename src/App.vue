@@ -1,29 +1,32 @@
 <template>
-  <router-view></router-view>
+  <router-view v-slot="{ Component }">
+    <suspense>
+      <component :is="Component" />
+    </suspense>
+  </router-view>
 </template>
 
-<script setup>
-</script>
+<script setup></script>
 
 <style>
-/* width */
-::-webkit-scrollbar {
-  width: 10px;
-}
+  /* width */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
 
-/* Track */
-::-webkit-scrollbar-track {
-  background: #000000;
-}
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #000000;
+  }
 
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 5px;
-}
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 5px;
+  }
 
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #888;
-}
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #888;
+  }
 </style>

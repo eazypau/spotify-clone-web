@@ -12,15 +12,9 @@ const routes = [
     component: () => import("../pages/Login.vue"),
   },
   {
-    path: "/user",
-    component: () => import("../layout/layout.vue"),
-    children: [
-      {
-        path: "home",
-        name: "Home",
-        component: () => import("../pages/Home.vue"),
-      },
-    ],
+    path: "/home",
+    name: "Home",
+    component: () => import("../pages/Home.vue"),
   },
 ];
 

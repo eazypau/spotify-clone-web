@@ -1,13 +1,16 @@
 import { createStore } from "vuex";
-import { spotifyApi } from "../api/spotify";
+// import { spotifyApi } from "../api/spotify";
+import SpotifyWebApi from "spotify-web-api-js";
+
+let spotifyApi = new SpotifyWebApi();
 
 export const store = createStore({
   state: {
     spotifyToken: "",
-    listOfPlaylist: null,
-    currentPlaylist: null,
-    currentUser: null,
-    currentPlaylistTracks: null,
+    listOfPlaylist: [],
+    currentPlaylist: {},
+    currentUser: {},
+    currentPlaylistTracks: [],
     currentPlaylistId: "",
     playState: false,
     currentPlaybackState: null,
@@ -84,82 +87,68 @@ export const store = createStore({
       spotifyApi.setAccessToken(state.spotifyToken);
       console.log("Successfully set token for spotify...");
     },
-    fetchUserPlaylist({ commit, state }) {
-      //   const spotifyApi = new SpotifyWebApi();
-      spotifyApi.getUserPlaylists().then(
-        function (data) {
-          commit("setUserPlaylist", data.items);
-          //   console.log("User playlists", data);
-          console.log("List of playlists in state: ", state.listOfPlaylist);
-          // console.log(data.items[0].description);
-          console.log("Successfullly get user playlists...");
-        },
-        function (err) {
-          console.error(err);
-        }
-      );
+    async fetchCurrentUser({commit}) {
+      try {
+        const response = await spotifyApi.getMe()
+        // console.log(response);
+        commit("setCurrentUser", response)
+      } catch (error) {
+        console.log(error);
+      }
     },
-    fetchCurrentPlaylist({ commit, state }) {
-      //   const spotifyApi = new SpotifyWebApi();
-      spotifyApi.getPlaylist("37i9dQZEVXcK8znD5QjojE").then(
-        function (data) {
-          commit("setCurrentPlaylist", data);
-          console.log("Current playlists in state: ", state.currentPlaylist);
-          // console.log(data.items[0].description);
-        },
-        function (err) {
-          console.error(err);
-        }
-      );
+    async fetchUserPlaylist({ commit }) {
+      try {
+        const response  = await spotifyApi.getUserPlaylists()
+        // console.log(response.items);
+        commit("setUserPlaylist", response.items)
+      } catch (error) {
+        console.log(error);
+      }
     },
-    fetchCurrentUserInfo({ commit, state }) {
-      spotifyApi.getMe().then(
-        function (user) {
-          commit("setCurrentUser", user);
-          console.log("Current user in state: ", state.currentUser);
-          // console.log("List of playlists in state: ", state.currentUser);
-          // console.log(data.items[0].description);
-        },
-        function (err) {
-          console.error(err);
-        }
-      );
+    async fetchCurrentPlaylist({ commit }, id) {
+      try {
+        const response = await spotifyApi.getPlaylist(id)
+        // console.log(response);
+        commit("setCurrentPlaylist", response)
+      } catch (error) {
+        console.log(error);
+      }
     },
-    fetchNextPlaylistAndTracks({ commit, state }) {
-      spotifyApi
-        .getPlaylist(state.currentPlaylistId)
-        .then((data) => {
-          commit("setCurrentPlaylist", data);
-          console.log("Current playlists in state: ", state.currentPlaylist);
-        })
-        .catch((err) => console.log(err));
-      spotifyApi
-        .getPlaylistTracks(state.currentPlaylistId)
-        .then((data) => {
-          commit("setCurrentPlaylistTracks", data.items);
-          console.log("List of tracks in state: ", state.currentPlaylistTracks);
-        })
-        .catch((err) => console.log(err));
+    async fetchNextPlaylistAndTracks({ commit, state }) {
+      try {
+        const response = await spotifyApi.getPlaylist(state.currentPlaylistId)
+        // console.log(response);
+        commit("setCurrentPlaylist", response)
+        const getTracks = await spotifyApi.getPlaylistTracks(state.currentPlaylistId)
+        // console.log(getTracks);
+        commit("setCurrentPlaylistTracks", getTracks)
+      } catch (error) {
+        console.log(error);
+      }
     },
-    fetchCurrentPlayback({ commit, state }) {
-      spotifyApi
-        .getMyCurrentPlaybackState()
-        .then((status) => {
-          console.log("Current playback: ", status);
-          commit("setCurrentPlaybackState", status);
-          commit("setPlayState", status.is_playing);
-          commit("setShuffleState", status.shuffle_state);
-          commit("setRepeatState", status.repeat_state);
-          console.log("shuffle state is ", state.shuffleState);
-          console.log("Current playback state is ", state.currentPlaybackState);
-        })
-        .catch((err) => console.log(err));
+    async fetchCurrentPlayback({ commit }) {
+      try {
+        const response = await spotifyApi.getMyCurrentPlaybackState()
+        console.log(response);
+        commit("setCurrentPlaybackState", response)
+      } catch (error) {
+        console.log(error);
+      }
     },
-    fetchCurrentTrack({ commit, state }) {
+    fetchCurrentTracks({ commit }) {
       spotifyApi.getMyCurrentPlayingTrack().then((track) => {
-        console.log("track is ", track);
+        // console.log("track is ", track);
         commit("setCurrentlyPlaying", track);
       });
     },
+    async fetchPlaylistTracks({commit}, id) {
+      try {
+        const response = await spotifyApi.getPlaylistTracks(id)
+        console.log(response);
+        commit("setCurrentPlaylistTracks", response.items)
+      } catch (error) {
+        console.log(error);
+      }
+    }
   },
 });
