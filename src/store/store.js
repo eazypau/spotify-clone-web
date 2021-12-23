@@ -16,7 +16,8 @@ export const store = createStore({
     currentPlaybackState: null,
     repeatState: null,
     shuffleState: null,
-    currentlyPlaying: null,
+    currentlyPlaying: {},
+    volume: 50,
   },
   mutations: {
     setUserToken(state, token) {
@@ -52,6 +53,9 @@ export const store = createStore({
     setCurrentlyPlaying(state, item) {
       state.currentlyPlaying = item;
     },
+    setVolume(state, newVolume) {
+      state.volume = newVolume;
+    },
   },
   getters: {
     getUserPlaylist: (state) => {
@@ -69,86 +73,132 @@ export const store = createStore({
     getCurrentPlaylistTracks: (state) => {
       return state.currentPlaylistTracks;
     },
+    getCurrentPlayBackState: (state) => {
+      return state.currentPlaybackState;
+    },
+    getMyCurrentPlayingTrack: (state) => {
+      return state.currentlyPlaying;
+    },
+    getVolume: (state) => {
+      return state.volume;
+    },
   },
   actions: {
     fetchUserToken({ commit, state }) {
       //   const spotifyApi = new SpotifyWebApi();
       const hash = window.location.hash.substring(1).split("&");
-
       const fullAccessToken = hash[0].split("=");
       const token = fullAccessToken[1];
-      console.log(token);
-
-      // console.log(`The current hash is ${hash[0]}`);
-      // console.log(`The current hash is ${fullAccessToken}`);
-      //   console.log(`Current token is ${token}`);
-
       commit("setUserToken", token);
       spotifyApi.setAccessToken(state.spotifyToken);
-      console.log("Successfully set token for spotify...");
+      // console.log("Successfully set token for spotify...");
     },
-    async fetchCurrentUser({commit}) {
+    async fetchCurrentUser({ commit }) {
       try {
-        const response = await spotifyApi.getMe()
+        const response = await spotifyApi.getMe();
         // console.log(response);
-        commit("setCurrentUser", response)
+        commit("setCurrentUser", response);
       } catch (error) {
         console.log(error);
       }
     },
     async fetchUserPlaylist({ commit }) {
       try {
-        const response  = await spotifyApi.getUserPlaylists()
+        const response = await spotifyApi.getUserPlaylists();
         // console.log(response.items);
-        commit("setUserPlaylist", response.items)
+        commit("setUserPlaylist", response.items);
       } catch (error) {
         console.log(error);
       }
     },
     async fetchCurrentPlaylist({ commit }, id) {
       try {
-        const response = await spotifyApi.getPlaylist(id)
+        const response = await spotifyApi.getPlaylist(id);
         // console.log(response);
-        commit("setCurrentPlaylist", response)
+        commit("setCurrentPlaylist", response);
       } catch (error) {
         console.log(error);
       }
     },
     async fetchNextPlaylistAndTracks({ commit, state }) {
       try {
-        const response = await spotifyApi.getPlaylist(state.currentPlaylistId)
+        const response = await spotifyApi.getPlaylist(state.currentPlaylistId);
         // console.log(response);
-        commit("setCurrentPlaylist", response)
-        const getTracks = await spotifyApi.getPlaylistTracks(state.currentPlaylistId)
+        const getTracks = await spotifyApi.getPlaylistTracks(state.currentPlaylistId);
         // console.log(getTracks);
-        commit("setCurrentPlaylistTracks", getTracks)
+        commit("setCurrentPlaylist", response);
+        commit("setCurrentPlaylistTracks", getTracks);
       } catch (error) {
         console.log(error);
       }
     },
     async fetchCurrentPlayback({ commit }) {
       try {
-        const response = await spotifyApi.getMyCurrentPlaybackState()
-        console.log(response);
-        commit("setCurrentPlaybackState", response)
+        const response = await spotifyApi.getMyCurrentPlaybackState();
+        // console.log(response);
+        commit("setCurrentPlaybackState", response);
       } catch (error) {
         console.log(error);
       }
     },
-    fetchCurrentTracks({ commit }) {
-      spotifyApi.getMyCurrentPlayingTrack().then((track) => {
-        // console.log("track is ", track);
-        commit("setCurrentlyPlaying", track);
-      });
-    },
-    async fetchPlaylistTracks({commit}, id) {
+    async fetchPlaylistTracks({ commit }, id) {
       try {
-        const response = await spotifyApi.getPlaylistTracks(id)
-        console.log(response);
-        commit("setCurrentPlaylistTracks", response.items)
+        const response = await spotifyApi.getPlaylistTracks(id);
+        // console.log(response);
+        commit("setCurrentPlaylistTracks", response);
       } catch (error) {
         console.log(error);
       }
-    }
+    },
+    async fetchCurrentPlayingTrack({ commit }) {
+      try {
+        const response = await spotifyApi.getMyCurrentPlayingTrack();
+        // console.log(response);
+        commit("setCurrentlyPlaying", response);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    playMusic() {
+      try {
+        spotifyApi.play();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    pauseMusic() {
+      try {
+        spotifyApi.pause();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async skipToNextTrack({ dispatch }) {
+      try {
+        await spotifyApi.skipToNext();
+        setTimeout(async () => {
+          await dispatch("fetchCurrentPlayingTrack");
+        }, 100);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async skipToPrevTrack({ dispatch }) {
+      try {
+        await spotifyApi.skipToPrevious();
+        setTimeout(async () => {
+          await dispatch("fetchCurrentPlayingTrack");
+        }, 100);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async setNewVolume({ state }) {
+      try {
+        spotifyApi.setVolume(state.volume);
+      } catch (error) {
+        console.log(error);
+      }
+    },
   },
 });

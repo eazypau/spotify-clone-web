@@ -102,7 +102,7 @@
           @click="!show ? (show = true) : (show = false)"
         >
           <div>
-            <!-- <img class="w-6 rounded-full" :src="user.images[0].url ? user.images[0].url : ''" /> -->
+            <img class="w-6 rounded-full" :src="user.images[0].url ? user.images[0].url : ''" />
           </div>
           <p class="text-white text-sm font-bold ml-2">
             {{ user.display_name }}
@@ -134,13 +134,11 @@
           </div>
         </div>
       </div>
-      <!-- Content -->
-      <!-- <router-view></router-view> -->
       <!-- playlist template -->
       <div class="py-6 h-full">
         <div class="flex items-end px-7 pb-5">
           <div class="w-60">
-            <!-- <img :src="currentList.images[0].url" alt="playlist image" /> -->
+            <img :src="currentList.images[0].url" alt="playlist image" />
           </div>
           <div class="ml-6 text-white">
             <div>
@@ -178,12 +176,8 @@
                   </th>
                 </tr>
               </thead>
-              <tbody v-for="(item, index) in currentPlaylistTracks" :key="index">
-                <!-- <tr
-                  class="my-10 bg-white bg-opacity-0 hover:bg-opacity-10"
-                  @mouseover="playlistItems[index].hovered = true"
-                  @mouseout="playlistItems[index].hovered = false"
-                >
+              <tbody v-for="(item, index) in currentPlaylistTracks.items" :key="index">
+                <tr class="my-10 bg-gray-400 bg-opacity-0 hover:bg-opacity-10">
                   <td class="py-4 text-center">
                     <button v-if="item.hovered">
                       <i class="bi bi-play-fill"></i>
@@ -191,23 +185,7 @@
                     <span v-if="!item.hovered">{{ index + 1 }}</span>
                   </td>
                   <td class="text-left">{{ item.track.name }}</td>
-                  <td class="text-left">{{ item.track.album.name }}</td> -->
-                  <!-- <td class="text-left">{{ item.dateAdded ? item.dateAdded : ''}}</td> -->
-                  <!-- <td class="text-left">
-                    {{ convertTime(item.track.duration_ms / 1000) }}
-                  </td>
-                </tr> -->
-                <tr
-                  class="my-10 bg-white bg-opacity-0 hover:bg-opacity-10"
-                >
-                  <td class="py-4 text-center">
-                    <button v-if="item.hovered">
-                      <i class="bi bi-play-fill"></i>
-                    </button>
-                    <span v-if="!item.hovered">{{ index + 1 }}</span>
-                  </td>
-                  <td class="text-left">{{ item.track.name }}</td>
-                  <td class="text-left">{{ item.track.album.name }}</td>
+                  <td class="text-left w-3/12 truncate pr-5">{{ item.track.album.name }}</td>
                   <!-- <td class="text-left">{{ item.dateAdded ? item.dateAdded : ''}}</td> -->
                   <td class="text-left">
                     {{ convertTime(item.track.duration_ms / 1000) }}
@@ -236,11 +214,11 @@
       <!-- Footer Play bar -->
       <div class="flex items-center">
         <div>
-          <img class="w-14 h-14" src="" alt="" />
+          <img class="w-14 h-14" :src="currentTrack.item.album.images[0].url" alt="" />
         </div>
         <div class="ml-3">
-          <p class="text-gray-400 text-sm">Song Name</p>
-          <p class="text-gray-400 text-xs">Artist</p>
+          <p class="text-gray-400 text-sm">{{ currentTrack.item.name }}</p>
+          <p class="text-gray-400 text-xs">{{ currentTrack.item.artists[0].name }}</p>
         </div>
         <div class="text-gray-400 ml-5">
           <button class="pt-1 cursor-not-allowed" disabled>
@@ -268,15 +246,19 @@
           <button :class="active ? 'text-green' : ''">
             <i class="bi bi-shuffle"></i>
           </button>
-          <button>
+          <button @click="store.dispatch('skipToPrevTrack')">
             <i class="bi bi-skip-start-fill"></i>
           </button>
           <button>
-            <i v-if="!store.state.playState" class="bi bi-play-circle-fill text-3xl"></i>
-            <i v-else class="bi bi-pause-circle-fill text-3xl"></i>
+            <i
+              v-if="!playBackState.is_playing"
+              class="bi bi-play-circle-fill text-3xl"
+              @click="play"
+            ></i>
+            <i v-else class="bi bi-pause-circle-fill text-3xl" @click="pause"></i>
           </button>
           <button>
-            <i class="bi bi-skip-end-fill"></i>
+            <i class="bi bi-skip-end-fill" @click="store.dispatch('skipToNextTrack')"></i>
           </button>
           <button>
             <i class="bi bi-arrow-repeat"></i>
@@ -286,7 +268,14 @@
       <div class="flex items-center">
         <!-- Volume and other utilities bar -->
         <i class="bi bi-volume-up-fill text-xl text-white mr-2"></i>
-        <input type="range" class="max-w-md h-1 slider" min="0" max="100" />
+        <input
+          type="range"
+          v-model="currentVolume"
+          @change="store.dispatch('setNewVolume')"
+          class="max-w-md h-1 slider"
+          min="0"
+          max="100"
+        />
       </div>
     </div>
   </div>
@@ -305,6 +294,8 @@
   await store.dispatch("fetchCurrentPlayback");
   await store.dispatch("fetchCurrentPlaylist", "37i9dQZF1EUMDoJuT8yJsl");
   await store.dispatch("fetchPlaylistTracks", "37i9dQZF1EUMDoJuT8yJsl");
+  await store.dispatch("fetchCurrentPlayingTrack");
+  store.dispatch("setNewVolume");
 
   const user = computed(() => {
     if (!store.getters.getCurrentUser) {
@@ -333,6 +324,20 @@
   const active = computed(() => {
     return store.getters.getShuffleState;
   });
+  const playBackState = computed(() => {
+    return store.getters.getCurrentPlayBackState;
+  });
+  const currentTrack = computed(() => {
+    return store.getters.getMyCurrentPlayingTrack;
+  });
+  const currentVolume = computed({
+    get() {
+      return store.getters.getVolume;
+    },
+    set(payload) {
+      store.commit("setVolume", payload);
+    },
+  });
 
   const convertTime = (time) => {
     // * from https://code.labstack.com/HVdZZYqH
@@ -351,6 +356,20 @@
     store.commit("setNextPlaylistId", playlistId);
     store.dispatch("fetchNextPlaylistAndTracks");
   };
+
+  const play = () => {
+    store.state.currentPlaybackState.is_playing = true;
+    store.dispatch("playMusic");
+  };
+
+  const pause = () => {
+    store.state.currentPlaybackState.is_playing = false;
+    store.dispatch("pauseMusic");
+  };
+
+  setInterval(() => {
+    store.dispatch("fetchCurrentPlayingTrack");
+  }, 5000);
 </script>
 <style scoped>
   .sideBar {

@@ -1,9 +1,11 @@
 <template>
-  <router-view v-slot="{ Component }">
-    <suspense>
-      <component :is="Component" />
-    </suspense>
-  </router-view>
+  <div>
+    <router-view v-slot="{ Component }">
+      <suspense>
+        <component :is="Component" />
+      </suspense>
+    </router-view>
+  </div>
 </template>
 
 <script setup></script>
