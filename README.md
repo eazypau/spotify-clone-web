@@ -32,3 +32,5 @@ Note: Please on your spotify app before initialing the web app.
 ## Resource & References
 * [Spotify for developer documentation](https://developer.spotify.com/)
 * [Build a Spotify home page using tailwind.css and Vue.js](https://www.youtube.com/watch?v=w5GQcHxJH1w&t=1265s&ab_channel=this.stephie)
+* [spotify-clone using react](https://github.com/seanho96/spotify-clone)
+* [vue-spotify](https://github.com/gk4m/vue-spotify)
