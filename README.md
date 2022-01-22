@@ -3,6 +3,7 @@ Spotify clone web app using Vue and TailwindCSS to view your saved and created p
 Note: Please on your spotify app before initialing the web app.
 
 ## Demo
+https://user-images.githubusercontent.com/83596481/150148187-17c6d3bd-3194-4446-bd3d-d411065dd069.mp4
 
 ## Technologies used
 * [Vue 3](https://v3.vuejs.org/) 
